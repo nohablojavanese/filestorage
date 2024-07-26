@@ -1,90 +1,95 @@
-// src/components/FileList.tsx
-import { useEffect, useState } from 'react';
-import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Skeleton, User } from "@nextui-org/react";
-import { createClient } from '@/lib/supabase/client';
-import { File } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import {
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@nextui-org/react";
+import { createClient } from "@/lib/supabase/client";
+import { FileObject } from "@supabase/storage-js";
+import SkeletonList from "./SkeletonList";
 
-type FileItem = {
-  name: string;
+interface ExtendedFileObject extends FileObject {
   size: number;
-  created_at: string;
-  id: string;
   type: string;
-};
+}
 
-type FileListProps = {
+interface FileListProps {
   folder: string;
   searchQuery: string;
   onFileSelect: (file: { id: string; type: string }) => void;
-  renderActions: (file: FileItem) => React.ReactNode;
-};
+  renderActions: (file: ExtendedFileObject) => React.ReactNode;
+}
 
-export default function FileList({ folder, searchQuery, onFileSelect, renderActions }: FileListProps) {
-  const [files, setFiles] = useState<FileItem[]>([]);
+export default function FileList({
+  folder,
+  searchQuery,
+  onFileSelect,
+  renderActions,
+}: FileListProps) {
+  const [files, setFiles] = useState<ExtendedFileObject[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
 
   useEffect(() => {
     async function fetchFiles() {
-      const { data, error } = await supabase.storage.from('Public').list(folder);
+      const { data, error } = await supabase.storage
+        .from("Public")
+        .list(folder, {
+          limit: 100,
+          offset: 0,
+          sortBy: { column: "name", order: "asc" },
+        });
       if (error) {
-        console.error('Error fetching files:', error);
-      } else {
-        setFiles(data as unknown as FileItem[]);
+        console.error("Error fetching files:", error);
+      } else if (data) {
+        // Extend FileObject with size and type
+        const extendedData: ExtendedFileObject[] = data.map((file) => ({
+          ...file,
+          size: file.metadata?.size || 0,
+          type: file.metadata?.mimetype || "unknown",
+        }));
+        setFiles(extendedData);
       }
       setLoading(false);
     }
-    fetchFiles();
-  }, [folder, supabase.storage]);
 
-  const filteredFiles = files.filter(file => 
+    fetchFiles();
+  }, [folder, supabase]);
+
+  const filteredFiles = files.filter((file) =>
     file.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
   if (loading) {
-    return (
-      <Table aria-label="File list loading skeleton">
-        <TableHeader>
-          <TableColumn>NAME</TableColumn>
-          <TableColumn>SIZE</TableColumn>
-          <TableColumn>CREATED AT</TableColumn>
-          <TableColumn>ACTIONS</TableColumn>
-        </TableHeader>
-        <TableBody>
-          {[...Array(5)].map((_, index) => (
-            <TableRow key={index}>
-              <TableCell><Skeleton className="h-3 w-3/4 rounded-lg"/></TableCell>
-              <TableCell><Skeleton className="h-3 w-1/4 rounded-lg"/></TableCell>
-              <TableCell><Skeleton className="h-3 w-1/2 rounded-lg"/></TableCell>
-              <TableCell><Skeleton className="h-3 w-1/4 rounded-lg"/></TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    );
+    return <SkeletonList />;
   }
+  const formatFileSize = (bytes: number): string => {
+    if (isNaN(bytes) || bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
 
   return (
     <Table aria-label="File list">
       <TableHeader>
-        <TableColumn>NAME</TableColumn>
-        <TableColumn>SIZE</TableColumn>
-        <TableColumn>CREATED AT</TableColumn>
-        <TableColumn>ACTIONS</TableColumn>
+        <TableColumn>Name</TableColumn>
+        <TableColumn>Size</TableColumn>
+        <TableColumn>Type</TableColumn>
+        <TableColumn>Actions</TableColumn>
       </TableHeader>
       <TableBody>
         {filteredFiles.map((file) => (
-          <TableRow key={file.id} onClick={() => onFileSelect({ id: file.id, type: file.type })}>
-            <TableCell>
-              <User
-                avatarProps={{
-                  icon: <File size={20} />,
-                }}
-                name={file.name}
-              />
-            </TableCell>
-            <TableCell>{(file.size / 1024).toFixed(2)} KB</TableCell>
-            <TableCell>{new Date(file.created_at).toLocaleString()}</TableCell>
+          <TableRow
+            key={file.id}
+            onClick={() => onFileSelect({ id: file.id, type: file.type })}
+          >
+            <TableCell>{file.name}</TableCell>
+            <TableCell>{formatFileSize(file.size)}</TableCell>
+            <TableCell>{file.type}</TableCell>
             <TableCell>{renderActions(file)}</TableCell>
           </TableRow>
         ))}
