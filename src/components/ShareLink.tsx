@@ -14,10 +14,10 @@ import { Share2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 type ShareLinkProps = {
-  fileId: string;
+  filePath: string;
 };
 
-export default function ShareLink({ fileId }: ShareLinkProps) {
+export default function ShareLink({ filePath }: ShareLinkProps) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [shareUrl, setShareUrl] = useState<string>("");
   const supabase = createClient();
@@ -25,7 +25,7 @@ export default function ShareLink({ fileId }: ShareLinkProps) {
   const generateShareLink = async () => {
     const { data, error } = await supabase.storage
       .from("Public")
-      .createSignedUrl(fileId, 60 * 60 * 24); // 24 hours
+      .createSignedUrl(filePath, 60 * 60 * 24); // 24 hours
     if (error) {
       console.error("Error generating share link:", error);
     } else if (data) {

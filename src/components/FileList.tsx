@@ -14,12 +14,16 @@ import SkeletonList from "./SkeletonList";
 interface ExtendedFileObject extends FileObject {
   size: number;
   type: string;
+  fullPath: string; // Add this line
+
 }
 
 interface FileListProps {
   folder: string;
   searchQuery: string;
-  onFileSelect: (file: { id: string; type: string }) => void;
+  onFileSelect: (file: {
+    [x: string]: string; id: string; type: string 
+}) => void;
   renderActions: (file: ExtendedFileObject) => React.ReactNode;
 }
 
@@ -50,6 +54,8 @@ export default function FileList({
           ...file,
           size: file.metadata?.size || 0,
           type: file.metadata?.mimetype || "unknown",
+          fullPath: `${folder}/${file.name}`, // Add this line
+
         }));
         setFiles(extendedData);
       }

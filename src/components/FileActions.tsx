@@ -1,44 +1,57 @@
-// src/components/FileActions.tsx
 import { Button } from "@nextui-org/react";
 import { Download, Trash } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 type FileActionsProps = {
-  fileId: string;
+  filePath: string;
   fileName: string;
   onDelete: () => void;
 };
 
 export default function FileActions({
-  fileId,
+  filePath,
   fileName,
   onDelete,
 }: FileActionsProps) {
-  const supabase = createClient();
-
   const handleDownload = async () => {
-    const { data, error } = await supabase.storage
-      .from("Public")
-      .download(fileId);
-    if (error) {
-      console.error("Error downloading file:", error);
-    } else if (data) {
-      const url = URL.createObjectURL(data);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+    const supabase = createClient();
+    try {
+      const { data, error } = await supabase.storage
+        .from("Public")
+        .download(filePath);
+      if (error) {
+        console.error("Error getting file URL:", (error as any).message, (error as any).details, (error as any).hint);
+        alert(`Error downloading file: ${error.message}`);
+      } else if (data) {
+        const url = URL.createObjectURL(data);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }
+    } catch (e) {
+      console.error("Unexpected error during download:", e);
+      alert(`Unexpected error during download: ${e instanceof Error ? e.message : String(e)}`);
     }
   };
 
   const handleDelete = async () => {
-    const { error } = await supabase.storage.from("Public").remove([fileId]);
-    if (error) {
-      console.error("Error deleting file:", error);
-    } else {
-      onDelete();
+    const supabase = createClient();
+    try {
+      const { error } = await supabase.storage.from("Public").remove([filePath]);
+      if (error) {
+        console.error("Error getting file URL:", (error as any).message, (error as any).details, (error as any).hint);
+        alert(`Error deleting file: ${error.message}`);
+      } else {
+        console.log("File deleted successfully");
+        onDelete();
+      }
+    } catch (e) {
+      console.error("Unexpected error during delete:", e);
+      alert(`Unexpected error during delete: ${e instanceof Error ? e.message : String(e)}`);
     }
   };
 
