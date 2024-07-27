@@ -1,4 +1,3 @@
-// src/app/page.tsx
 "use client";
 
 import { useState, useCallback } from "react";
@@ -26,7 +25,7 @@ export default function Home() {
   const [selectedFile, setSelectedFile] = useState<{
     id: string;
     type: string;
-    path: string;  // Add this line
+    path: string; // Add this line
   } | null>(null);
   const supabase = createClient();
 
@@ -38,7 +37,7 @@ export default function Home() {
         try {
           const { data, error } = await supabase.storage
             .from("Public")
-            .upload(`${currentFolder}/${file.name}-${Date.now()}`, file);
+            .upload(`${currentFolder}/${file.name}`, file);
 
           if (error) {
             console.error("Error uploading file:", error);
@@ -95,13 +94,14 @@ export default function Home() {
           <FileList
             folder={currentFolder}
             searchQuery={searchQuery}
-            onFileSelect={(file) =>
+            onFileSelect={(file) => {
+              console.log("Selected file:", file); // Add this line for debugging
               setSelectedFile({
                 id: file.id,
                 type: file.type,
-                path: file.fullPath, // Add this line
-              })
-            }
+                path: file.path, // Note: changed from file.fullPath to file.path
+              });
+            }}
             renderActions={(file) => (
               <>
                 <FileActions

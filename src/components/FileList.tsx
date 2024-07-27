@@ -14,16 +14,17 @@ import SkeletonList from "./SkeletonList";
 interface ExtendedFileObject extends FileObject {
   size: number;
   type: string;
-  fullPath: string; // Add this line
-
+  fullPath: string;
 }
 
 interface FileListProps {
   folder: string;
   searchQuery: string;
   onFileSelect: (file: {
-    [x: string]: string; id: string; type: string 
-}) => void;
+    [x: string]: string;
+    id: string;
+    type: string;
+  }) => void;
   renderActions: (file: ExtendedFileObject) => React.ReactNode;
 }
 
@@ -49,13 +50,11 @@ export default function FileList({
       if (error) {
         console.error("Error fetching files:", error);
       } else if (data) {
-        // Extend FileObject with size and type
         const extendedData: ExtendedFileObject[] = data.map((file) => ({
           ...file,
           size: file.metadata?.size || 0,
           type: file.metadata?.mimetype || "unknown",
-          fullPath: `${folder}/${file.name}`, // Add this line
-
+          fullPath: `${folder ? folder + "/" : ""}${file.name}`,
         }));
         setFiles(extendedData);
       }
@@ -91,7 +90,13 @@ export default function FileList({
         {filteredFiles.map((file) => (
           <TableRow
             key={file.id}
-            onClick={() => onFileSelect({ id: file.id, type: file.type })}
+            onClick={() =>
+              onFileSelect({
+                id: file.id,
+                type: file.type,
+                path: file.fullPath,
+              })
+            }
           >
             <TableCell>{file.name}</TableCell>
             <TableCell>{formatFileSize(file.size)}</TableCell>

@@ -18,25 +18,35 @@ export default function FilePreview({ filePath, fileType }: FilePreviewProps) {
       setError(null);
       const supabase = createClient();
       try {
+        console.log("FilePreview: Attempting to create signed URL for:", filePath);
+        console.log("FilePreview: File type:", fileType);
+
+        if (!filePath) {
+          throw new Error("File path is undefined");
+        }
+
         const { data, error } = await supabase.storage
           .from("Public")
           .createSignedUrl(filePath, 60);
+
         if (error) {
           console.error("Error getting file URL:", error.message);
           setError(`Error getting file URL: ${error.message}`);
         } else if (data) {
+          console.log("Successfully created signed URL:", data.signedUrl);
           setPreviewUrl(data.signedUrl);
         }
       } catch (e) {
         console.error("Unexpected error getting file URL:", e);
-        setError(`Unexpected error: ${e instanceof Error ? e.message : String(e)}`);
+        setError(
+          `Unexpected error: ${e instanceof Error ? e.message : String(e)}`
+        );
       } finally {
         setLoading(false);
       }
     }
     getFileUrl();
-  }, [filePath]);
-
+  }, [filePath, fileType]);
 
   if (loading) {
     return (
@@ -75,7 +85,12 @@ export default function FilePreview({ filePath, fileType }: FilePreviewProps) {
     return (
       <Card>
         <CardBody>
-          <iframe src={previewUrl} width="100%" height="500px" title="PDF Preview" />
+          <iframe
+            src={previewUrl}
+            width="100%"
+            height="500px"
+            title="PDF Preview"
+          />
         </CardBody>
       </Card>
     );
