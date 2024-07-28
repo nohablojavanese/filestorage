@@ -1,4 +1,3 @@
-// src/components/ShareLink.tsx
 import { useState } from "react";
 import {
   Button,
@@ -44,7 +43,7 @@ export default function ShareLink({ filePath }: ShareLinkProps) {
       >
         <Share2 />
       </Button>
-      <Modal isOpen={isOpen} onClose={onClose}>
+      <Modal className="bg-gray-950 border border-gray-800 " isOpen={isOpen} onClose={onClose}>
         <ModalContent>
           <ModalHeader>Share Link</ModalHeader>
           <ModalBody>
@@ -53,6 +52,7 @@ export default function ShareLink({ filePath }: ShareLinkProps) {
           <ModalFooter>
             <Button
               color="primary"
+              className="hover:bg-gray-600"
               onPress={() => navigator.clipboard.writeText(shareUrl)}
             >
               Copy Link

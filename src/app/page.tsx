@@ -25,10 +25,13 @@ export default function Home() {
   const [selectedFile, setSelectedFile] = useState<{
     id: string;
     type: string;
-    path: string; // Add this line
+    path: string;
   } | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const supabase = createClient();
-
+  const refreshFiles = () => {
+    setRefreshTrigger((prev) => prev + 1);
+  };
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       setUploading(true);
@@ -52,6 +55,7 @@ export default function Home() {
         }
       }
       setUploading(false);
+      refreshFiles();
     },
     [supabase.storage, currentFolder]
   );
@@ -95,25 +99,28 @@ export default function Home() {
             folder={currentFolder}
             searchQuery={searchQuery}
             onFileSelect={(file) => {
-              console.log("Selected file:", file); // Add this line for debugging
+              console.log("Selected file:", file);
               setSelectedFile({
                 id: file.id,
                 type: file.type,
-                path: file.path, // Note: changed from file.fullPath to file.path
+                path: file.path,
               });
             }}
-            renderActions={(file) => (
+            renderActions={(file, refreshFiles) => (
               <>
                 <FileActions
                   filePath={file.fullPath}
                   fileName={file.name}
                   onDelete={() => {
                     setSelectedFile(null);
+                    refreshFiles();
                   }}
+                  refreshFiles={refreshFiles}
                 />
                 <ShareLink filePath={file.fullPath} />
               </>
             )}
+            refreshTrigger={refreshTrigger}
           />
         </CardBody>
         <CardFooter className="flex justify-center pb-6">

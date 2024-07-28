@@ -6,12 +6,14 @@ type FileActionsProps = {
   filePath: string;
   fileName: string;
   onDelete: () => void;
+  refreshFiles: () => void;
 };
 
 export default function FileActions({
   filePath,
   fileName,
   onDelete,
+  refreshFiles,
 }: FileActionsProps) {
   const handleDownload = async () => {
     const supabase = createClient();
@@ -48,6 +50,7 @@ export default function FileActions({
       } else {
         console.log("File deleted successfully");
         onDelete();
+        refreshFiles();
       }
     } catch (e) {
       console.error("Unexpected error during delete:", e);
