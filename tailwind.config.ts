@@ -101,7 +101,6 @@ const config = {
           layout: {}, // dark theme layout tokens
           colors: {}, // dark theme colors
         },
-        // ... custom themes
       },
     }),
   ],
