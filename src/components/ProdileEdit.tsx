@@ -1,46 +1,69 @@
-'use client'
-import { useEffect } from 'react'
-import { useProfile } from '@/lib/hooks/profile'
-import { ProfileSchema } from '@/lib/schemas/profile'
-import { User } from '@supabase/supabase-js'
-import { Button, Input, Card, CardBody, CardHeader, CardFooter } from '@nextui-org/react'
-import { useForm, Controller } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+"use client";
+import { useEffect } from "react";
+import { useProfile } from "@/lib/hooks/profile";
+import { ProfileSchema } from "@/lib/schemas/profile";
+import { User } from "@supabase/supabase-js";
+import {
+  Button,
+  Input,
+  Card,
+  CardBody,
+  CardHeader,
+  CardFooter,
+} from "@nextui-org/react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import UserProfile from "./Profile";
 
 export default function ProfileEdit({ user }: { user: User | null }) {
-  const { profile, loading, getProfile, updateProfile } = useProfile(user)
-  const { control, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm({
+  const { profile, loading, getProfile, updateProfile } = useProfile(user);
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm({
     resolver: zodResolver(ProfileSchema),
     defaultValues: profile,
-  })
+  });
+  const supabase = createClient();
 
   useEffect(() => {
-    getProfile()
-  }, [getProfile])
+    getProfile();
+  }, [getProfile]);
 
   useEffect(() => {
-    reset(profile)
-  }, [profile, reset])
+    reset(profile);
+  }, [profile, reset]);
 
   const onSubmit = async (data: any) => {
-    const result = await updateProfile(data)
+    const result = await updateProfile(data);
     if (result.success) {
       // You can add a success notification here
-      console.log(result.message)
+      console.log(result.message);
     } else {
       // You can add an error notification here
-      console.error(result.message)
+      console.error(result.message);
     }
-  }
+  };
+  const router = useRouter();
 
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <Button isLoading color="primary">Loading</Button>
+        <Button isLoading color="primary">
+          Loading
+        </Button>
       </div>
-    )
+    );
   }
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push("/signout");
+  };
   return (
     <Card className="max-w-md mx-auto">
       <CardHeader>
@@ -52,7 +75,7 @@ export default function ProfileEdit({ user }: { user: User | null }) {
             label="Email"
             id="email"
             isReadOnly
-            value={user?.email || ''}
+            value={user?.email || ""}
           />
           <Controller
             name="fullname"
@@ -62,7 +85,7 @@ export default function ProfileEdit({ user }: { user: User | null }) {
                 {...field}
                 label="Full Name"
                 id="fullname"
-                value={field.value || ''}
+                value={field.value || ""}
                 isInvalid={!!errors.fullname}
                 errorMessage={errors.fullname?.message}
               />
@@ -76,7 +99,7 @@ export default function ProfileEdit({ user }: { user: User | null }) {
                 {...field}
                 label="Username"
                 id="username"
-                value={field.value || ''}
+                value={field.value || ""}
                 isInvalid={!!errors.username}
                 errorMessage={errors.username?.message}
               />
@@ -90,7 +113,7 @@ export default function ProfileEdit({ user }: { user: User | null }) {
                 {...field}
                 label="Website"
                 id="website"
-                value={field.value || ''}
+                value={field.value || ""}
                 isInvalid={!!errors.website}
                 errorMessage={errors.website?.message}
               />
@@ -108,10 +131,16 @@ export default function ProfileEdit({ user }: { user: User | null }) {
         >
           Update Profile
         </Button>
-        <form action="/signout" method="post">
-          <Button type="submit" color="danger">Sign out</Button>
-        </form>
+        {/* <form action="/signout" method="post"> */}
+          <Button
+            onClick={handleSignOut}
+            className="ml-4 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+          >
+            Sign out
+          </Button>
+        {/* </form> */}
       </CardFooter>
+      {/* <UserProfile/> */}
     </Card>
-  )
+  );
 }
